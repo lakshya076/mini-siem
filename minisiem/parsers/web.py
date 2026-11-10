@@ -26,8 +26,81 @@ Return None for blank or malformed lines. Never raise on bad input.
 """
 from __future__ import annotations
 
+import re
+from datetime import datetime, timezone
 from minisiem.event import Event
 
 
 def parse_line(line: str, host: str | None = None) -> Event | None:
-    raise NotImplementedError("W1: implement web access log parsing")
+    if not line or not line.strip():
+        return None
+
+    # Regex pattern for Combined/Common Log Format
+    # 1: IP, 2: Ident (ignored), 3: User, 4: Timestamp, 5: Request, 6: Status, 7: Bytes, 8: Referer, 9: User Agent
+    pattern = r'^(\S+) \S+ (\S+) \[(.*?)\] "(.*?)" (\d{3}) (\S+)(?: "(.*?)" "(.*?)")?$'
+    
+    try:
+        match = re.match(pattern, line.rstrip("\n"))
+        if not match:
+            return None
+
+        src_ip = match.group(1)
+        user_raw = match.group(2)
+        ts_raw = match.group(3)
+        request_raw = match.group(4)
+        status = match.group(5)
+        bytes_raw = match.group(6)
+        referer_raw = match.group(7)
+        ua_raw = match.group(8)
+
+        # Parse Timestamp: 10/Oct/2000:13:55:36 -0700
+        ts = datetime.strptime(ts_raw, "%d/%b/%Y:%H:%M:%S %z").astimezone(timezone.utc)
+
+        # Parse User
+        user = None if user_raw == "-" else user_raw
+
+        # Parse Request Line (Method Path Protocol)
+        action = None
+        path = None
+        protocol = None
+        request_parts = request_raw.split(" ")
+        if len(request_parts) == 3:
+            action = request_parts[0]
+            path = request_parts[1]
+            protocol = request_parts[2]
+
+        # Parse Bytes
+        try:
+            bytes_val = int(bytes_raw) if bytes_raw != "-" else 0
+        except ValueError:
+            bytes_val = 0
+
+        # Parse Referer and User Agent
+        referer = None if referer_raw == "-" or referer_raw is None else referer_raw
+        user_agent = None if ua_raw == "-" or ua_raw is None else ua_raw
+
+        meta = {
+            "path": path,
+            "protocol": protocol,
+            "bytes": bytes_val,
+            "referer": referer,
+            "user_agent": user_agent,
+            "request": request_raw,
+        }
+
+        return Event(
+            timestamp=ts,
+            source="web",
+            event_type="http_request",
+            src_ip=src_ip,
+            user=user,
+            action=action,
+            status=status,
+            severity="info",
+            host=host,
+            raw=line.rstrip("\n"),
+            meta=meta,
+        )
+
+    except Exception:
+        return None
