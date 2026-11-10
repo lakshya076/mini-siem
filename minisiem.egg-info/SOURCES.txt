@@ -1,0 +1,14 @@
+README.md
+pyproject.toml
+minisiem/__init__.py
+minisiem/event.py
+minisiem.egg-info/PKG-INFO
+minisiem.egg-info/SOURCES.txt
+minisiem.egg-info/dependency_links.txt
+minisiem.egg-info/requires.txt
+minisiem.egg-info/top_level.txt
+minisiem/parsers/__init__.py
+minisiem/parsers/firewall.py
+minisiem/parsers/web.py
+tests/test_firewall_parser.py
+tests/test_web_parser.py
