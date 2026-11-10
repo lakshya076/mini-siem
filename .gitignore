@@ -1,0 +1,11 @@
+# Synopsis and other private documents stay out of the repo
+*.docx
+*.pdf
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+*.db
+*.db-wal
+*.db-shm
+.env
