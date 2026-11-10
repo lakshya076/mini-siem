@@ -81,6 +81,21 @@ python tools/attack.py --target <host> --scan --ssh 8 --http 8080
 python tools/e2e_check.py --server http://<server>:8000 --expect brute_force,suspicious_http --wait 60
 ```
 
+Things found while testing between two machines (Windows server/attacker, Debian 13 monitored host):
+
+- ufw rate-limits its log lines at every level except `full` (about 3 per minute after a burst of 10),
+  so a fast port scan leaves only a few log lines and `port_scan` cannot fire. Use
+  `sudo ufw logging full` during a scan test, then set it back to `low`.
+- Tailscale accepts traffic on `tailscale0` before ufw sees it, so scans over a Tailscale IP are not
+  logged at all. Scan the host's LAN address instead.
+- OpenSSH 9.8+ (`PerSourcePenalties`) starts refusing connections from an address after a few failed
+  logins. The failures before that are still logged, and enough for `brute_force` and `password_spray`.
+  Attack from a different address than the one you administer the host from.
+
+Verified live on 2026-11-10: `port_scan`, `brute_force`, `password_spray`, `invalid_user`,
+`success_after_failures`, `suspicious_http`, `http_error_flood`. `sudo_failures` is covered by the
+replay tests only.
+
 ## Security notes
 
 - Every `/api/*` endpoint needs `Authorization: Bearer <MINISIEM_API_KEY>`; the server generates a
