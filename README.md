@@ -20,20 +20,56 @@ Made with [Hive](https://github.com/lakshya076/HiveMind)
 
 ## Contents
 
-1. [Features](#features)
-2. [Requirements](#requirements)
-3. [Install](#install)
-4. [Run the server](#run-the-server)
-5. [Open the dashboard](#open-the-dashboard)
-6. [Try it on one machine (replay demo)](#try-it-on-one-machine-replay-demo)
-7. [Monitor other machines](#monitor-other-machines)
-8. [Lab attack simulation](#lab-attack-simulation)
-9. [Detection rules](#detection-rules)
-10. [API reference](#api-reference)
-11. [Project layout](#project-layout)
-12. [Tests](#tests)
-13. [Troubleshooting](#troubleshooting)
-14. [Security notes](#security-notes)
+1. [About the project](#about-the-project)
+2. [Features](#features)
+3. [Requirements](#requirements)
+4. [Install](#install)
+5. [Run the server](#run-the-server)
+6. [Open the dashboard](#open-the-dashboard)
+7. [Try it on one machine (replay demo)](#try-it-on-one-machine-replay-demo)
+8. [Monitor other machines](#monitor-other-machines)
+9. [Lab attack simulation](#lab-attack-simulation)
+10. [Detection rules](#detection-rules)
+11. [API reference](#api-reference)
+12. [Project layout](#project-layout)
+13. [Tests](#tests)
+14. [Troubleshooting](#troubleshooting)
+15. [Security notes](#security-notes)
+
+## About the project
+
+**The problem.** Computers and networks produce a steady stream of security-relevant logs:
+logins, web requests, firewall decisions, privilege changes. Reading them by hand is slow, so
+attacks such as password guessing or port scanning are easy to miss while they happen. Commercial
+SIEM platforms solve this, but they are complex, expensive and built for large enterprises.
+
+**What Mini SIEM is.** A small, transparent SIEM for learning and for small or lab environments. It
+implements the core SIEM pipeline end to end, in code short enough to read:
+
+1. **Collect:** a lightweight agent on each monitored machine gathers authentication, web server,
+   firewall and application logs and sends them to a central server.
+2. **Normalize:** parsers turn each raw log line into one standard event format (time, source and
+   destination IP, event type, user, action, status, severity, host).
+3. **Store:** events and alerts are kept in a SQLite database, giving an audit trail of what
+   happened, when, from where and how severe it was.
+4. **Detect:** a rule engine watches the event stream over sliding time windows and recognizes
+   brute-force logins, password spraying, logins that succeed after many failures, port scans,
+   web attacks (SQL injection, XSS, path traversal), content discovery and repeated sudo failures.
+   Each rule is mapped to a MITRE ATT&CK technique.
+5. **Alert and visualize:** detections become alerts with severity, description and the raw log
+   lines as evidence, shown on a web dashboard with statistics, charts and filters.
+
+**What it is for.** Demonstrating security monitoring, log analysis and intrusion detection in
+teaching, cybersecurity training, controlled lab experiments (attack a test machine and watch the
+alerts appear), and basic central monitoring for small setups. It is not meant to replace an
+enterprise SIEM; the goal is to show clearly how one works and to be easy to extend with new log
+sources and detection rules.
+
+**How it was built.** Python with FastAPI for the backend, SQLite for storage, and HTML, Bootstrap
+and Chart.js for the dashboard. It was tested live between two machines: a Windows PC running the
+server and the simulated attacks, and a Debian Linux host being monitored. Part of the code (the web
+and firewall log parsers and the HTTP attack signatures) was written by a remote AI coding worker
+orchestrated with [HiveMind](https://github.com/lakshya076/HiveMind), against tests written in advance.
 
 ## Features
 
