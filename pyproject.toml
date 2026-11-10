@@ -15,5 +15,8 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 include = ["minisiem*"]
 
+[tool.setuptools.package-data]
+minisiem = ["dashboard/*"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]

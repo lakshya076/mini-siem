@@ -26,10 +26,9 @@ minisiem/
   parsers/web.py         Apache / Nginx combined + common log format      [worker W1]
   parsers/firewall.py    UFW / iptables kernel LOG lines                  [worker W2]
   parsers/windows.py     Windows Security events (stretch)
-  detection/engine.py    sliding windows keyed by IP / user
-  detection/rules.py     rule implementations
+  detection/engine.py    sliding windows keyed by IP / user, all rules, duplicate suppression
   detection/http_signatures.py  SQLi / XSS / traversal / scanner UA       [worker W3, optional]
-  alerts.py              alert creation + duplicate suppression
+  alerts.py              Alert record
   db.py                  SQLite schema and queries
   api.py                 POST /api/ingest, GET /api/events, /api/alerts, /api/stats
   agent.py               tail files / journalctl, batch, ship to server
@@ -37,6 +36,7 @@ minisiem/
 tools/replay.py          replay samples/*.log into the server
 tools/demo_web.py        small target web app that writes a combined-format access log
 tools/e2e_check.py       assert expected alerts exist via the API
+tools/attack.py          lab attack simulator (port scan, failed SSH logins, malicious HTTP)
 tests/
 ```
 
