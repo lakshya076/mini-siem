@@ -15,7 +15,7 @@ def main() -> None:
     p.add_argument("--db", default="minisiem.db")
     p.add_argument("--rules", default=None, help="TOML file overriding rule thresholds")
     a = p.parse_args()
-    key = os.environ.get("MINISIEM_API_KEY")
+    key = os.environ.get("MINISIEM_API_KEY", "").strip()
     if not key:
         key = secrets.token_urlsafe(24)
         print(f"MINISIEM_API_KEY not set; generated one for this run:\n  {key}\n")

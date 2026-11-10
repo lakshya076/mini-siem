@@ -136,7 +136,7 @@ def main(argv=None) -> None:
     p.add_argument("--host", default=socket.gethostname(), help="host name reported for these logs")
     a = p.parse_args(argv)
 
-    key = os.environ.get("MINISIEM_API_KEY")
+    key = os.environ.get("MINISIEM_API_KEY", "").strip()  # keys read from files often carry \r\n
     if not key:
         p.error("set MINISIEM_API_KEY")
     if not a.file and not a.journal:
