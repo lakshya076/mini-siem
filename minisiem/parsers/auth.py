@@ -23,7 +23,8 @@ SSH_FAILED = re.compile(
 SSH_ACCEPTED = re.compile(r"^Accepted (\S+) for (\S+) from (\S+) port (\d+)")
 SSH_INVALID = re.compile(r"^Invalid user (\S*) from (\S+) port (\d+)")
 SUDO_FAIL = re.compile(r"^pam_unix\(sudo:auth\): authentication failure;.*?\buser=(\S+)")
-SUDO_CMD = re.compile(r"^\s*(\S+) : (?:.*; )?TTY=.*?; USER=(\S+) ; COMMAND=(.*)$")
+# "user : TTY=.. ; PWD=.. ; USER=root ; COMMAND=.." optionally preceded by a reason such as "user NOT in sudoers ; "
+SUDO_LINE = re.compile(r"^\s*(\S+) : (?:(.*?) ; )?TTY=\S+ ; PWD=.*? ; USER=(\S+) ; COMMAND=(.*)$")
 
 SSHD = {"sshd", "sshd-session"}  # OpenSSH >= 9.8 logs auth from sshd-session
 
@@ -50,10 +51,15 @@ def parse_message(program: str, message: str, timestamp: datetime,
         if m := SUDO_FAIL.match(message):
             return Event(event_type="sudo_failure", user=m[1], action="sudo", status="failure",
                          meta={"service": "sudo"}, **base)
-        if m := SUDO_CMD.match(message):
-            user, target, command = m.groups()
-            return Event(event_type="sudo_command", user=user, action="sudo", status="success",
-                         meta={"service": "sudo", "target_user": target, "command": command}, **base)
+        if m := SUDO_LINE.match(message):
+            user, reason, target, command = m.groups()
+            meta = {"service": "sudo", "target_user": target, "command": command}
+            if reason is None:
+                return Event(event_type="sudo_command", user=user, action="sudo", status="success", meta=meta, **base)
+            if "not in sudoers" in reason.lower() or "not allowed" in reason.lower():
+                return Event(event_type="sudo_failure", user=user, action="sudo", status="failure",
+                             meta={**meta, "reason": reason}, **base)
+            # "N incorrect password attempts" repeats the pam_unix failures already counted
     return None
 
 
